@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "multi-agent-research"
+version = "1.0.0"
+description = "A multi-agent AI system for automated deep research with parallel search, relevance filtering, and streaming report generation."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "sarifi08"},
+]
+keywords = [
+    "ai-agents",
+    "multi-agent",
+    "research",
+    "openai",
+    "llm",
+    "async",
+    "web-search",
+    "orchestration",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "openai>=1.10.0",
+    "tavily-python>=0.3.0",
+    "aiohttp>=3.9.1",
+    "pydantic-settings>=2.1.0",
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.4",
+    "pytest-asyncio>=0.23.3",
+    "pytest-cov>=4.1.0",
+]
+ui = [
+    "streamlit>=1.30.0",
+]
+
+[project.scripts]
+research = "example:main"
+
+[project.urls]
+Homepage = "https://github.com/sarifi08/multi-agent-research"
+Repository = "https://github.com/sarifi08/multi-agent-research"
+Issues = "https://github.com/sarifi08/multi-agent-research/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+include = ["agents*", "core*", "tools*", "config*", "monitoring*"]

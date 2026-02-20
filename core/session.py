@@ -140,6 +140,7 @@ class ResearchSession:
         return {
             "query":        self.query,
             "success":      self.success,
+            "report":       self.report,
             "sub_queries":  self.sub_queries,
             "num_sources":  len(self.sources),
             "total_cost":   f"${self.total_cost():.4f}",

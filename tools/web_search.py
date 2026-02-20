@@ -28,15 +28,23 @@ class WebSearchTool:
 
     TAVILY_URL = "https://api.tavily.com/search"
 
-    def __init__(self, api_key: str, max_results: int = 5):
+    def __init__(self, api_key: str, max_results: int = 5, cache=None):
         self.api_key = api_key
         self.max_results = max_results
+        self.cache = cache  # optional SearchCache instance
 
     async def search_async(self, query: str) -> List[SearchResult]:
         """
         Truly async web search — doesn't block other searches from running.
         Called by Researcher when running in parallel.
+        Checks cache first if available.
         """
+        # Check cache first
+        if self.cache:
+            cached = self.cache.get(query)
+            if cached is not None:
+                return cached
+
         logger.info(f"🔍 Searching: '{query}'")
 
         payload = {
@@ -59,7 +67,13 @@ class WebSearchTool:
                         return []
 
                     data = await response.json()
-                    return self._parse_results(data)
+                    results = self._parse_results(data)
+
+                    # Cache successful results
+                    if self.cache and results:
+                        self.cache.set(query, results)
+
+                    return results
 
         except asyncio.TimeoutError:
             logger.error(f"Search timed out for '{query}'")

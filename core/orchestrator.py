@@ -21,17 +21,26 @@ from agents.researcher import ResearcherAgent
 from agents.analyst import AnalystAgent
 from agents.writer import WriterAgent
 from tools.web_search import WebSearchTool
+from tools.cache import SearchCache
 
 
 class Orchestrator:
 
-    def __init__(self):
+    def __init__(self, model_override: str = None):
         self.settings = get_settings()
+
+        # CLI can override the model from .env
+        if model_override:
+            self.settings.llm_model = model_override
+
+        # Search cache — avoids paying for repeated queries
+        self.cache = SearchCache(cache_dir=".cache", ttl_hours=24)
 
         # Shared tool — one instance, used by all Researcher agents
         self.search_tool = WebSearchTool(
             api_key=self.settings.tavily_api_key,
-            max_results=self.settings.max_search_results
+            max_results=self.settings.max_search_results,
+            cache=self.cache
         )
 
         # Initialize all agents

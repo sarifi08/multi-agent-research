@@ -25,13 +25,17 @@ User Query
                                                    Research Report
 ```
 
-## 🎯 What This Demonstrates
+## ✨ Features
 
 - **Multi-agent orchestration** — four specialized AI agents (Planner → Researcher → Analyst → Writer) coordinated through a shared-state "whiteboard" pattern
 - **True async parallelism** — researchers run genuinely concurrent web searches using `aiohttp`, not thread-pool workarounds
 - **Smart retry logic** — failed searches are automatically rephrased by the Planner and retried, with configurable retry limits
 - **Cost & performance monitoring** — every agent's token usage, cost, and timing is tracked and reported in a detailed breakdown
 - **Streaming output** — the Writer streams the final report token-by-token for a responsive CLI experience
+- **Interactive CLI** — full `argparse` interface with `--query`, `--model`, `--export`, and `--no-stream` flags
+- **Streamlit Web UI** — visual interface to run research, watch agents work, and download reports
+- **Search caching** — disk-backed cache with TTL expiry avoids burning API credits on repeated queries
+- **Markdown export** — save reports as `.md` files from CLI or download from the web UI
 - **Clean separation of concerns** — session (data), tracker (observability), and agents (logic) are fully decoupled
 
 ## 📁 Project Structure
@@ -47,7 +51,8 @@ multi-agent-research/
 │   ├── orchestrator.py     # Coordinates the 4-agent pipeline
 │   └── session.py          # Shared state (the "whiteboard")
 ├── tools/
-│   └── web_search.py       # Async Tavily search wrapper (aiohttp)
+│   ├── web_search.py       # Async Tavily search wrapper (aiohttp)
+│   └── cache.py            # Disk-backed search cache with TTL
 ├── config/
 │   └── settings.py         # Pydantic settings from .env
 ├── monitoring/
@@ -55,9 +60,20 @@ multi-agent-research/
 ├── tests/
 │   ├── test_planner.py     # Unit tests with mocked OpenAI
 │   ├── test_researcher.py  # Async tests with mocked search
-│   └── test_analyst.py     # Filter & ranking tests
-├── example.py              # Demo entry point
+│   ├── test_analyst.py     # Filter & ranking tests
+│   ├── test_writer.py      # Report generation tests
+│   ├── test_orchestrator.py # Pipeline integration tests
+│   └── test_cache.py       # Cache TTL + persistence tests
+├── .github/
+│   ├── workflows/tests.yml # CI: pytest on Python 3.10-3.12
+│   ├── ISSUE_TEMPLATE/     # Bug report & feature request templates
+│   └── pull_request_template.md
+├── app.py                  # Streamlit web UI
+├── example.py              # CLI entry point
+├── pyproject.toml          # Modern Python packaging
 ├── requirements.txt
+├── CONTRIBUTING.md
+├── LICENSE
 ├── .env.example
 └── README.md
 ```
@@ -147,11 +163,42 @@ Optional settings in `.env`:
 
 ### Usage
 
+#### CLI (Interactive)
+
 ```bash
+# Interactive prompt — just run it
 python example.py
+
+# Direct query
+python example.py "What are the latest breakthroughs in AI agents?"
+
+# With options
+python example.py --query "AI in healthcare" --model gpt-3.5-turbo
+python example.py "quantum computing 2024" --no-stream --export report.md
 ```
 
-**Example output:**
+**CLI Options:**
+
+| Flag | Description |
+|------|-------------|
+| `query` | Research query (positional or `--query`) |
+| `--model`, `-m` | Override LLM model (default: from `.env`) |
+| `--no-stream` | Get full report at once (no streaming) |
+| `--export`, `-e` | Export report to Markdown file |
+
+#### Web UI (Streamlit)
+
+```bash
+streamlit run app.py
+```
+
+The web UI provides:
+- 🔍 Query input with real-time agent status
+- 📊 Cost, timing, and source metrics
+- 📥 One-click Markdown report download
+- 📜 Search history in sidebar
+
+**Example CLI output:**
 
 ```
 🔍 Query: What are the latest breakthroughs in AI agents in 2024?
@@ -192,11 +239,22 @@ pytest tests/ -v
 # Run a specific test file
 pytest tests/test_planner.py -v
 
-# Run with coverage
-pytest tests/ -v --cov=agents --cov=core
+# Run with coverage report
+pytest tests/ -v --cov=agents --cov=core --cov=tools --cov=monitoring --cov-report=term-missing
 ```
 
-Tests use `unittest.mock` to mock OpenAI API calls — no API keys needed to run tests.
+**Test coverage includes:**
+
+| Module | Test File | What's Tested |
+|--------|-----------|---------------|
+| Planner | `test_planner.py` | Query decomposition, bad LLM output handling |
+| Researcher | `test_researcher.py` | Async search, retry logic, failure recovery |
+| Analyst | `test_analyst.py` | Score filtering, relevance judgment, empty results |
+| Writer | `test_writer.py` | Report generation, streaming, empty findings |
+| Orchestrator | `test_orchestrator.py` | Full pipeline, model override, failure handling |
+| Cache | `test_cache.py` | Hit/miss, TTL expiry, corruption recovery, persistence |
+
+All tests use `unittest.mock` — **no API keys needed** to run tests.
 
 ## 🔧 How It Works (Detailed)
 
@@ -236,9 +294,14 @@ Composes the final report from approved findings:
 - **[OpenAI API](https://openai.com/)** — powers all four agents (planning, rephrasing, analysis, writing)
 - **[Tavily API](https://tavily.com/)** — advanced web search with relevance scoring
 - **[aiohttp](https://docs.aiohttp.org/)** — true async HTTP for parallel searches
+- **[Streamlit](https://streamlit.io/)** — web UI for visual research interface
 - **[Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)** — type-safe configuration from `.env`
 - **[Loguru](https://github.com/Delgan/loguru)** — structured logging with emoji
-- **[pytest](https://docs.pytest.org/)** — unit testing with async support
+- **[pytest](https://docs.pytest.org/)** — unit testing with async support and coverage
+
+## 🤝 Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 

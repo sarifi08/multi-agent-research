@@ -38,6 +38,9 @@ coverage.xml
 # Logs
 *.log
 
+# Cache
+.cache/
+
 # Distribution
 *.tar.gz
 *.zip
